@@ -1,0 +1,376 @@
+<?php
+
+/**
+ * Implements hook_entity_info()
+ */
+function tbs_location_entity_entity_info() {
+    $return = array(
+        'tbs_location_entity' => array(
+        'label' => t('Travel Booking System Location'),
+        'plural label' => t('Travel Booking System Locations'),
+        'description' => t('Travel Booking System Locations Entity'),
+        'entity class' => 'TbdLocationEntity',
+        'controller class' => 'EntityAPIController',
+        'base table' => 'tbs_location_entity_cities',
+        'uri callback' => 'tbs_location_entity_uri',
+        'fieldable' => TRUE,
+        'entity keys' => array(
+            'id' => 'lid',
+            'bundle' => 'type',
+            'label' => 'label',
+        ),
+        'static cache' => TRUE,
+        'bundles' => array(),
+        'bundle keys' => array(
+            'bundle' => 'type',
+        ),
+        'view modes' => array(
+            'full' => array(
+                'label' => t('Full location Content'),
+                'custom settings' => FALSE,
+            ),
+            'teaser' => array(
+                'label' => t('Teaser Location Content'),
+                'custom settings' => FALSE,
+            ),
+        ),
+        'module' => 'tbs_location_entity',
+      //  'views controller class' => 'TbsLocationEntityViewsController',
+        'metadata controller class' => 'TbsLocationEntityMetadataController',
+        'access callback' => 'tbs_location_entity_access',
+        ),
+    );
+    
+    $types = db_select('tbs_location_type', 'lo')
+        ->fields('lo')
+        ->execute()
+        ->fetchAllAssoc('type');
+        
+    foreach($types as $type => $info){
+        $return['tbs_location_entity']['bundels'][$type] = array(
+            'label' => $info->label,
+            'admin' => array(
+                'path' => 'admin/structure/locations/manage/%tbs_location_entity_type',
+                'real path' => 'admin/structure/locations/manage/' . $type,
+                'bundle argument' => 4,
+                'access arguments' => array('administer tbs location entity'),
+            ),
+        );
+    }
+    
+    // Support entity cache module
+    if(module_exists('entitycache')) {
+        $return['tbs_location_entity']['field cache'] = FALSE;
+        $return['tbs_location_entity']['entity cache'] = TRUE;
+    }
+    
+    $return['tbs_location_entity_type'] = array(
+        'label' => t('Travel Booking System location entity type'),
+        'plural label' => t('Travel Bookins system location entity types'),
+        'entity class' => 'TbsLocationEntityType',
+        'controller class' => 'EntityAPIControllerExportable',
+        'base table' => 'tbs_location_type',
+        'fieldable' => FALSE,
+        'bundle of' => 'tbs_location_entity',
+        'exportable' => TRUE,
+        'entity keys' => array(
+            'id' => 'id',
+            'name' => 'type',
+            'label' => 'label',
+        ),
+        'access callback' => 'tbs_location_entity_type_access',
+        'module' => 'tbs_location_entity',
+        'admin ui' => array(
+            'path' => 'admin/structure/locations',
+            'file' => 'includes/tbs_location_entity.admin.inc',
+            'controller class' => 'TBSLocationEntityTypeUIController',
+        ),
+        
+    );
+    dsm($return);
+    return $return;
+}
+/**
+ * Implements hook_permission()
+ */
+function tbs_location_entity_permission(){
+    $permissions = array(
+        'administer tbs location entites' => array(
+            'title' => t('Administer Travel Booking System Location Entity'),
+            'description' => t('Edit and view all Travel Booking System Location Entities.'),
+        ),
+        'administer tbs location entity type' => array(
+            'title' => t('Administer Travel Booking System Location Emtity Type'),
+            'description' => t('Create and delete fields, and set their permissions.'),
+        ),
+    );
+    foreach(tbs_location_entity_get_types() as $type) {
+        $type_name = check_plain($type);
+        $permissions += array(
+            "edit $type_name location entity" => array(
+                'title' => t('%type_name: Edit location entity', array('%type_name' => $type->label)),
+            ),
+            "update $type_name location entity" => array(
+                'title' => t('%type_name: Update Location entity', array('%type_name' => $type->label)),
+            ),
+            "delete $type_name location entity" => array(
+                'title' => t('%type_name: Delete Location entity', array('%type_name' => $type->label)),
+            ),
+        );
+    }
+    return $permissions;
+}
+/**
+ * Gets an array of all location types, keyed by the type name.
+ */
+function tbs_location_entity_get_types($type_name = NULL) {
+    $types = entity_load_multiple_by_name('tbs_location_entity_type', isset($type_name) ? array($type_name) : FALSE);
+    return isset($type_name) ? reset($types) : $types;
+}
+/**
+ * Fetch a location Object
+ */
+function tbs_location_entity_load($lid, $reset = FALSE) {
+    $locations = tbs_location_entity_load_multiple(array($lid),array(),$reset);
+    return reset($locations);
+}
+/**
+ * Load Multiple location based on a certain Condition
+ */
+function tbs_location_entity_load_multiple($lids = array(), $conditions = array(), $reset = FALSE) {
+    return entity_load('tbs_location_entity', $lids, $conditions, $reset);
+}
+
+/**
+ * Deletes a location
+ */
+function tbs_location_entity_delete(TbsLocationEntity $loacation) {
+    $loacation->delete();
+}
+/**
+ * Deletes Multiple Locations
+ */
+function tbs_location_entity_delete_multiple(array $lids) {
+     entity_get_controller('tbs_location_entity')->delete($lids);
+}
+/**
+ * Save Locations
+ */
+function tbs_location_entity_save(TbsLocationEntity $location) {
+    return $location->save();
+}
+
+function tbs_location_entity_new($type = '') {
+    return entity_get_controller('tbs_location_entity')->create($type);
+}
+
+/**
+ * Saves a location type to the db
+ */
+function tbs_location_entity_type_save(TbsLocationEntityType $LoctionType){
+    $LoctionType->save();
+}
+
+/**
+ * Deletes a location type
+ */
+function tbs_location_entity_type_delete(TbsLocationEntityType $LocationType){
+    $LocationType->delete();
+}
+
+function tbs_location_entity_tbs_location_entity_type_insert(TbsLocationEntityType $LocationType){
+    menu_rebuild();
+}
+
+function tbs_location_entity_tbs_location_entity_type_update(TbsLocationEntityType $LocationType){
+    menu_rebuild();
+}
+
+function tbs_location_entity_tbs_location_entity_type_delete($type){
+    if($lids = array_keys(tbs_location_entity_load_multiple(FALSE,array('type' => $type->type)))) {
+        tbs_location_entity_delete_multiple($lids);
+    }
+    menu_rebuild();
+}
+
+function tbs_location_entity_access($op, $location = NULL, $account = NULL ) {
+    if(user_access('administer tbs location entites', $account)){
+        return TRUE;
+    }
+    if($op == 'create' || $op == 'update'){
+        $op = 'edit';
+    }
+    $access = module_invoke_all('tbs_location_entity_access', $op, $location, $account);
+    
+    if(in_array(FALSE, $access, TRUE)) {
+        return FALSE;
+    }
+    elseif(in_array(TRUE, $access, TRUE)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+/**
+ * Acccess Callback for the entity API
+ */
+function tbs_location_entity_type_access($op, $type = NULL, $account = NULL){
+    if(user_access('administer tbs location entity type', $account)){
+        return TRUE;
+    }
+    if($op == 'create' || $op == 'update'){
+        $op = 'edit';
+    }
+    
+    $access = module_invoke_all('tbs_location_entity_type_access', $op, $type, $account);
+    
+    if (in_array(FALSE, $access, TRUE)) {
+        return FALSE;
+    }
+    elseif (in_array(TRUE, $access, TRUE)) {
+        return TRUE;
+    }
+    return FALSE;
+}
+/**
+ * Implements hook_theme()
+ */
+function tbs_location_entity_theme() {
+    return array(
+        'tbs_location_entity_admin_type'  => array(
+            'variables' => array(
+                'label' => NULL,
+                'type' => NULL
+            ),
+        ),
+        'tbs_location_entity' => array(
+            'render element' => 'elements',
+            'template' => 'tbs_location_entity',
+        ),
+    );
+}
+/**
+ * The class used for Travel booking system entities.
+ */
+class TbsLocationEntity extends Entity {
+    
+    /**
+     * The Tbs Location Entity id
+     */
+    public $lid;
+    
+    /**
+     * The name of the location Type
+     */
+    public $type;
+    
+    /**
+     * The location label
+     */
+    public $label;
+    
+    /**
+     * The User id of the person who entered the location.
+     */
+    public $uid;
+    
+    /**
+     * The Unix timestam when the location was created.
+     */
+    public $created;
+    
+    /**
+     * The unix timestamp when the location was most recently saved.
+     */
+    public $changed;
+    
+    /**
+     * This is the constructor of the tbs location entities
+     */
+    public function __construct($values = array()){
+        if(isset($values['user'])) {
+            $this->setUser($values['user']);
+            unset($values['user']);
+        }
+        if(isset($values['type']) && is_object($values['type'])) {
+            $values['type'] = $values['type']->type;
+        }
+        if(!isset($values['label']) && isset($values['type']) && $type = tbs_location_entity_get_types($values['type'])){
+            $values['label'] = $type->label;
+        }
+        parent::__construct($values, 'tbs_location_entity');
+    }
+    public function user() {
+        return user_load($this->uid);
+    }
+    
+    public function setUser($account) {
+        $this->uid= is_object($account) ? $account->uid : $account;
+    }
+    
+    public function type() {
+        return tbs_location_entity_get_types($this->type);
+    }
+    
+    public function url() {
+        $uri = $this->uri();
+        return url($uri['path'], $uri);
+    }
+    public function path() {
+        $uri = $this->uri();
+        return $uri['path'];
+    }
+    
+    public function defaultUri() {
+        return  array(
+            'path' => 'location/' . $this->lid,
+            'options' => array('fragment' => 'location-' . $this->type),
+        );
+    }
+    public function buildContent($view_mode = 'full', $lancode = NULL) {
+        $content = array();
+        
+        if(!empty($this->is_new)){
+            $content['empty']['#markup'] = '<em class="location-entity-no-data">' . t('There is no location data yet') . '</em>';
+        }
+        return entity_get_controller($this->entityType)->buildContent($this,$view_mode, $lancode, $content);
+    }
+    public function save() {
+        if(empty($this->created) && (!empty($this->is_new) || !$this->lid )){
+            $this->created = REQUEST_TIME;
+        }
+        $this->changed = REQUEST_TIME;
+        
+        parent::save();
+        
+        // Update the static cache from profile2_load_by_user().
+        //$cache = &drupal_static('profile2_load_by_user', array());
+        //if (isset($cache[$this->uid])) {
+        //    $cache[$this->uid][$this->type] = $this->pid;
+        //}
+    }
+}
+
+class TbsLocationEntityType extends Entity {
+    
+    /**
+     * Whether the locatio types should be modified by a user
+     */
+    public $islocal = TRUE;
+    
+    /**
+     * whether the location entity should be viewed by the user
+     */
+    public $isforegin = FALSE;
+    
+    public $type;
+    public $label;
+    public $weight = 0;
+    
+    public function __construct($values = array()){
+        parent::__construct($values,'tbs_location_entity_type');
+    }
+    
+    public function isLocked() {
+         return isset($this->status) && empty($this->is_new) && (($this->status & ENTITY_IN_CODE) || ($this->status & ENTITY_FIXED));
+    }
+}
