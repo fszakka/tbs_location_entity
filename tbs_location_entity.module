@@ -9,7 +9,7 @@ function tbs_location_entity_entity_info() {
         'label' => t('Travel Booking System Location'),
         'plural label' => t('Travel Booking System Locations'),
         'description' => t('Travel Booking System Locations Entity'),
-        'entity class' => 'TbdLocationEntity',
+        'entity class' => 'TbsLocationEntity',
         'controller class' => 'EntityAPIController',
         'base table' => 'tbs_location_entity_cities',
         'uri callback' => 'tbs_location_entity_uri',
@@ -91,6 +91,34 @@ function tbs_location_entity_entity_info() {
     return $return;
 }
 /**
+ * Implements hook_menu()
+ */
+function tbs_location_entity_menu(){
+    $items = array();
+    
+    $items['tbslocation/add'] = array(
+        'title' => 'Add a Location',
+        'page callback' => 'tbs_location_entity_admin_add_page',
+        'access arguments' => array('administer tbs location entites'),
+        'file' => 'includes/tbs_location_entity_type.admin.inc',
+        'type' => MENU_LOCAL_ACTION,
+        'tab_parent' => 'location',
+        'tab_root' => 'location',
+    );
+    
+  foreach(tbs_location_entity_get_types() as $type => $info) {
+        $items['tbslocation/add/' . $type] = array(
+            'title' => 'Add a location',
+            'page callback' => 'tbs_location_entity_add',
+            'page arguments' => array(2),
+            'access callback' => 'entity_access',
+            'access arguments' => array('create', 'tbs_location_entity', $type),
+            'file' => 'includes/tbs_location_entity_type.admin.inc',
+        );
+  }
+    return $items;
+}
+/**
  * Implements hook_permission()
  */
 function tbs_location_entity_permission(){
@@ -160,6 +188,9 @@ function tbs_location_entity_save(TbsLocationEntity $location) {
     return $location->save();
 }
 
+//function tbs_location_entity_save($locations) {
+//    entity_save('tbs_location_entity', $locations);
+//}
 function tbs_location_entity_new($type = '') {
     return entity_get_controller('tbs_location_entity')->create($type);
 }
