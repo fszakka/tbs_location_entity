@@ -106,7 +106,28 @@ function tbs_location_entity_menu(){
         'tab_root' => 'location',
     );
     
-  foreach(tbs_location_entity_get_types() as $type => $info) {
+    $tbslocation_uri = 'tbslocation/%tbs_location_entity';
+    $tbslocation_uri_argument_position = 1;
+    
+    $items[$tbslocation_uri] = array(
+        'title callback' => 'entity_label',
+        'title argument' => array('tbs_locaiton_entity', $tbslocation_uri_argument_position),
+        'page callback' => 'tbs_location_entity_view',
+        'page arguments' => array($tbslocation_uri_argument_position),
+        'access callback' => 'entity_access',
+        'access arguments' => array('view', 'tbs_location_entity', $tbslocation_uri_argument_position),
+        'file' => 'tbs_location_entity.pages.inc',
+    );
+    
+    $items[$tbslocation_uri . '/view'] = array(
+        'title' => 'View',
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => -10,
+    );
+    
+    
+    
+    foreach(tbs_location_entity_get_types() as $type => $info) {
         $items['tbslocation/add/' . $type] = array(
             'title' => 'Add a location',
             'page callback' => 'tbs_location_entity_add',

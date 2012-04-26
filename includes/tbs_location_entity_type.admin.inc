@@ -20,7 +20,7 @@ function tbs_location_entity_add($type) {
     $location_type = tbs_location_entity_get_types($type);
     
     $location_entity = entity_create('tbs_location_entity', array('type' => $type));
-    drupal_set_title(t('Create @name', array('@name' => entity_label('tbs_location_entity_type', $location_type))));
+    drupal_set_title(t('Add locations that are related to [ @name ]', array('@name' => entity_label('tbs_location_entity_type', $location_type))));
     
     $output = drupal_get_form('tbs_location_entity_attribute_form', $location_entity);
       
@@ -38,7 +38,8 @@ function tbs_location_entity_attribute_form($form, &$form_state, $location_type)
         '#type' => 'textfield',
         '#required' => TRUE,
         '#title' => t('Name'),
-        '#default_value' => $location_type->label,
+        '#default_value' => '',
+        '#description' => t('Add location names that are related to @name ', array('@name' => $location_type->label)),
     );
     
     $form['uid'] = array(
