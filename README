@@ -1,0 +1,7 @@
+This is a custom entity type called tbs_location_entity
+
+It is done by using drupal 7 Entity API.
+
+The Entity is [tbs_location_entity]
+
+The Entity Type is [tbs_location_entity_type]

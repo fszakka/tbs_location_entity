@@ -87,7 +87,7 @@ function tbs_location_entity_entity_info() {
         ),
         
     );
-    dsm($return);
+    
     return $return;
 }
 /**
