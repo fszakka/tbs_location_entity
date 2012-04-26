@@ -125,6 +125,27 @@ function tbs_location_entity_menu(){
         'weight' => -10,
     );
     
+    $items[$tbslocation_uri . '/delete'] = array(
+        'title' => 'Delete location',
+        'title callback' => 'tbs_location_entity_label',
+        'title arguments' => array($tbslocation_uri_argument_position),
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('tbs_location_entity_delete_form', $tbslocation_uri_argument_position),
+        'access callback' => 'entity_access',
+        'access arguments' => array('edit', 'tbs_location_entity', $tbslocation_uri_argument_position),
+        'file' => 'includes/tbs_location_entity_type.admin.inc',
+    );
+    
+    $items[$tbslocation_uri . '/edit'] = array(
+        'title' => 'Edit',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('tbs_location_entity_form', $tbslocation_uri_argument_position),
+        'access callback' => 'entity_access',
+        'access arguments' => array('edit', 'tbs_location_entity', $tbslocation_uri_argument_position),
+        'file' => 'includes/tbs_location_type.admin.inc',
+        'type' => MENU_LOCAL_TASK,
+        'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    );
     
     
     foreach(tbs_location_entity_get_types() as $type => $info) {
@@ -137,6 +158,17 @@ function tbs_location_entity_menu(){
             'file' => 'includes/tbs_location_entity_type.admin.inc',
         );
   }
+  
+  $items['admin/structure/locations/%tbs_location_entity/delete'] = array(
+        'title' => 'Delete',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('tbs_location_entity_type_form_delete_confirm', 4),
+        'access arguments' => array('administer tbs location entity type'),
+        'weight' => 1,
+        'type' => MENU_NORMAL_ITEM,
+        'file' => 'includes/tbs_location_type.admin.inc',
+  );
+  
     return $items;
 }
 /**
