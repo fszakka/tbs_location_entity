@@ -10,4 +10,5 @@ files[] = tbs_location_entity.module
 files[] = tbs_location_entity.install
 files[] = includes/tbs_location_entity.admin.inc
 files[] = includes/tbs_location_entity_type.admin.inc
+files[] = includes/tbs_location_entity.pages.inc
 files[] = tbs_location_entity.info.inc
